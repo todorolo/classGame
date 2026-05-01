@@ -18,8 +18,6 @@ public class TakeScreenshot : MonoBehaviour
     public InputActionReference pictureAction;   // Drag input key here
     public RenderTexture renderTexture;          // Drag render texture here
 
-    public bool canPhotograph = true;            // Use this outside to stop interactions ???
-
     private void OnEnable()
     { // Turns on the camera rendering and take picture button when script is enabled
         RenderPipelineManager.endCameraRendering += RenderPipelineManager_endCameraRendering;
@@ -38,7 +36,7 @@ public class TakeScreenshot : MonoBehaviour
     {
         bool picturePressed = (pictureAction != null) && pictureAction.action.WasPressedThisFrame(); // Detects if key pressed
 
-        if (picturePressed) ; // When key is pressed, screenshots and checks for cryptids
+        if (picturePressed); // When key is pressed, screenshots and checks for cryptids
         {
             takeScreenshot = true; // screenshots without UI, uses stuff above
             CryptidCheck();
@@ -48,7 +46,7 @@ public class TakeScreenshot : MonoBehaviour
     private void RenderPipelineManager_endCameraRendering(ScriptableRenderContext arg1, Camera arg2)
     {
         if (takeScreenshot)
-                {
+        {
             takeScreenshot = false; // if screenshot is true, turns it off, then does below
 
             int width = Screen.width;
@@ -60,7 +58,24 @@ public class TakeScreenshot : MonoBehaviour
             screenshotTexture.Apply();
 
             byte[] byteArray = screenshotTexture.EncodeToPNG(); // Writes screenshot to file with current date+time for iterations
-            System.IO.File.WriteAllBytes(Application.dataPath + "/CameraScreenshot" + DateTime.Now.ToString() + ".png", byteArray);
+                                                                // int filenumber = 0;
+                                                                // string filepath = Application.dataPath + "Screenshots/CameraScreenshot" + filenumber.ToString() + ".png";
+                                                                // int length = 300;
+                                                                // for (int i = 0; i < length;  i++)
+                                                                // {
+                                                                //     if (!System.IO.File.Exists(filepath))
+                                                                //     {
+                                                                //         System.IO.File.WriteAllBytes(filepath, byteArray);
+                                                                //         Debug.Log("Taking Screenshot" + filepath);
+                                                                //         yield break;
+                                                                //    }
+                                                                //     filenumber++;
+                                                                //     filepath = Application.dataPath + "Screenshots/CameraScreenshot" + filenumber.ToString() + ".png";
+                                                                // }
+                                                                // System.IO.File.WriteAllBytes(Application.dataPath + "/CameraScreenshot.png", byteArray);
+                                                                // this stuff ^^^ only works under private IEnumerator not render pipeline
+                                                                // " + DateTime.Now.ToString() + " after "/CameraScreenshot ... it was breaking it?
+            System.IO.File.WriteAllBytes(Application.dataPath + "/CameraScreenshot.png", byteArray);
         }
     }
 
