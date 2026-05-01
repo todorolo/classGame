@@ -1,12 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class PauseMenuController : MonoBehaviour
 {
     [Header("Pause Menu UI")]
     public GameObject pauseMenuPanel;
+
+    [Header("Main Menu Reference")]
+    public GameObject mainMenuUI;
+
+    [Header("Sensitivity UI")]
     public Slider lookSensitivitySlider;
     public TMP_Text lookSensitivityValueLabel;
 
@@ -14,11 +20,14 @@ public class PauseMenuController : MonoBehaviour
     public InputActionReference pauseAction;
 
     [Header("Player Reference")]
-    public FirstPersonLook playerLook; // Drag the exact object that has FirstPersonLook.cs
+    public FirstPersonLook playerLook;
 
     [Header("Look Sensitivity Settings")]
     public float minLookSensitivity = 0.1f;
     public float maxLookSensitivity = 10f;
+
+    [Header("Scene Settings")]
+    public string mainMenuSceneName = "MainMenu";
 
     private bool isPaused = false;
 
@@ -39,26 +48,30 @@ public class PauseMenuController : MonoBehaviour
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(false);
 
-        if (playerLook == null)
-        {
-            Debug.LogWarning("PauseMenuController: playerLook is not assigned in the Inspector.");
-            return;
-        }
+        SetupSensitivitySlider();
 
-        if (lookSensitivitySlider != null)
+        // Keep cursor usable if main menu is open
+        if (mainMenuUI != null && mainMenuUI.activeSelf)
         {
-            lookSensitivitySlider.minValue = minLookSensitivity;
-            lookSensitivitySlider.maxValue = maxLookSensitivity;
-            lookSensitivitySlider.value = playerLook.sensitivityX;
-            lookSensitivitySlider.onValueChanged.AddListener(SetLookSensitivity);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
-
-        SetLookSensitivity(playerLook.sensitivityX);
-        ResumeGame();
+        else
+        {
+            ResumeGame();
+        }
     }
 
     private void Update()
     {
+        // Block pause while main menu is active
+        if (mainMenuUI != null && mainMenuUI.activeSelf)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
+
         bool pausePressed = pauseAction != null && pauseAction.action.WasPressedThisFrame();
 
         if (pausePressed)
@@ -70,6 +83,35 @@ public class PauseMenuController : MonoBehaviour
         }
     }
 
+    private void SetupSensitivitySlider()
+    {
+        if (lookSensitivitySlider == null)
+            return;
+
+        lookSensitivitySlider.minValue = minLookSensitivity;
+        lookSensitivitySlider.maxValue = maxLookSensitivity;
+
+        if (playerLook != null)
+            lookSensitivitySlider.value = playerLook.sensitivityX;
+
+        lookSensitivitySlider.onValueChanged.RemoveListener(SetLookSensitivity);
+        lookSensitivitySlider.onValueChanged.AddListener(SetLookSensitivity);
+
+        SetLookSensitivity(lookSensitivitySlider.value);
+    }
+
+    public void SetLookSensitivity(float value)
+    {
+        if (playerLook != null)
+        {
+            playerLook.sensitivityX = value;
+            playerLook.sensitivityY = value;
+        }
+
+        if (lookSensitivityValueLabel != null)
+            lookSensitivityValueLabel.text = value.ToString("F2");
+    }
+
     public void PauseGame()
     {
         isPaused = true;
@@ -79,7 +121,7 @@ public class PauseMenuController : MonoBehaviour
             pauseMenuPanel.SetActive(true);
 
         if (playerLook != null)
-            playerLook.DisableLook();//we need to add the function "DisableLook" to FP Look or whatever we ewant to disable
+            playerLook.DisableLook();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -94,32 +136,29 @@ public class PauseMenuController : MonoBehaviour
             pauseMenuPanel.SetActive(false);
 
         if (playerLook != null)
-            playerLook.EnableLook(); //we need to add the function "EnableLook" to FP Look or whatever we ewant to disable
+            playerLook.EnableLook();
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
+    // 🔥 RETURN TO MAIN MENU
     public void ReturnToMainMenu()
     {
         Time.timeScale = 1f;
-
-        if (SceneController.Instance != null)
-            SceneController.Instance.LoadMainMenu();
-        else
-            Debug.LogWarning("No SceneController found in the scene.");
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
-    public void SetLookSensitivity(float value)
+    // 🔥 QUIT GAME
+    public void QuitGame()
     {
-        if (playerLook != null)
-        {
-            playerLook.sensitivityX = value;
-            playerLook.sensitivityY = value;
-        }
+        Debug.Log("Quitting Game...");
 
-        if (lookSensitivityValueLabel != null)
-            lookSensitivityValueLabel.text = value.ToString("F2");
+        Application.Quit();
+
+        // This helps when testing in Unity Editor
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
-    
 }
