@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 
 public class FirstPersonMove : MonoBehaviour
 {
+
+    Animator animator;
     private CharacterController controller;
 
     InputAction moveAction;
@@ -41,6 +43,9 @@ public class FirstPersonMove : MonoBehaviour
 
     void Start()
     {
+        animator = GetComponent<Animator>();
+
+        
         controller = GetComponent<CharacterController>();
 
         moveAction = InputSystem.actions.FindAction("Move");
@@ -59,6 +64,12 @@ public class FirstPersonMove : MonoBehaviour
 
     void Update()
     {
+        if (moveInput.y > 0)
+        {
+            animator.SetBool("iswalking", true);
+        }
+
+
         if (groundCheck == null) return;
 
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
