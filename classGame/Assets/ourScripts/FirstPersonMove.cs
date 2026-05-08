@@ -64,9 +64,14 @@ public class FirstPersonMove : MonoBehaviour
 
     void Update()
     {
-        if (moveInput.y > 0)
+
+        if (moveInput.y > 0.1f)
         {
-            animator.SetBool("iswalking", true);
+         animator.SetBool("iswalking", true);
+        }
+        else
+        {
+          animator.SetBool("iswalking", false);
         }
 
 
